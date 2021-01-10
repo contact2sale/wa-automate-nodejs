@@ -97,27 +97,7 @@ export async function initClient(sessionId?: string, config?:ConfigObject, custo
 }
 
 export async function injectApi(page: Page) {
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'wapi.js'))
-  });
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'axios.min.js'))
-  });
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'jsSha.min.js'))
-  });
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'base64.js'))
-  });
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'qr.min.js'))
-  });
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'hash.js'))
-  });
-  await page.addScriptTag({
-    path: require.resolve(path.join(__dirname, '../lib', 'launch.js'))
-  });
+
   return page;
 }
 
