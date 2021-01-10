@@ -492,6 +492,49 @@ window.WAPI.getChatById = function (id) {
     return found;
 };
 
+window.WAPI.sendExist = function(chatId, returnChat = true, Send = true) {
+    const scope = function (id, erro, status, text = null) {
+        let e = {
+          me: Store.Me.attributes,
+          to: id,
+          erro: erro,
+          text: text,
+          status: status,
+        };
+        return e;
+      }
+
+    // Check chat exists (group is always a chat)
+    let chat = await window.WAPI.getChat(chatId);
+  
+    // Check if contact number exists
+    if (!chat && !chatId.includes('@g')) {
+      let ck = await window.WAPI.checkNumberStatus(chatId);
+  
+      if (!ck.numberExists) {
+        return scope(chatId, true, ck.status, 'The number does not exist');
+      }
+  
+      // Load chat ID for non contact
+      await window.Store.Chat.find(ck.id);
+  
+      chatId = ck.id._serialized;
+      chat = await window.WAPI.getChat(chatId);
+    }
+  
+    if (!chat) {
+      return scope(chatId, true, 404);
+    }
+    if (Send) {
+      await window.Store.SendSeen(chat, false);
+    }
+    if (returnChat) {
+      return chat;
+    }
+    return scope(chatId, false, 200);
+  }
+  
+
 
 /**
  * I return all unread messages from an asked chat and mark them as read.
@@ -814,7 +857,24 @@ window.WAPI.sendMessage = async function (id, message) {
     let chat = WAPI.getChat(id);
     if((!chat && !id.includes('g') || chat.msgs.models.length == 0)) {
         var contact = WAPI.getContact(id)
-        if(!contact || !contact.isMyContact) return 'Not a contact';
+        if(!contact || !contact.isMyContact) {
+            chat = await WAPI.sendExist(to);
+            const message = content;
+            if (!chat.erro) {
+                const result = await chat.sendMessage(message);
+                if (result === 'success' || result === 'OK') {
+                    return chat.lastReceivedKey._serialized;
+                } else {
+                    const m = { type: 'sendtext', text: message };
+                    const To = await WAPI.getchatId(chat.id);
+                    const obj = WAPI.scope(To, true, result, null);
+                    Object.assign(obj, m);
+                    return obj;
+                }
+            } else {
+                return chat;
+            }
+        }
         await Store.Chat.find(Store.Contact.get(id).id)
         chat = WAPI.getChat(id);
     }
