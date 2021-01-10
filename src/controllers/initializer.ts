@@ -239,11 +239,6 @@ export async function create(config: ConfigObject = {}): Promise<Client> {
         await kill(waPage);
         await create(config).then(config.restartOnCrash);
       });
-      const pureWAPI = await checkWAPIHash();
-      if(!pureWAPI) {
-        config.skipBrokenMethodsCheck = true;
-        // config.skipPatches = true;
-      }
       debugInfo.NUM = await waPage.evaluate(`(window.localStorage['last-wid'] || '').replace('@c.us','').replace(/"/g,"").slice(-4)`);
       if(config?.hostNotificationLang){
         await waPage.evaluate(`window.hostlang="${config.hostNotificationLang}"`)
